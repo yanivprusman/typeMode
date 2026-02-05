@@ -1731,10 +1731,6 @@ void wipe_statusbar(void)
 /* Blank out the two help lines (when they are present). */
 void blank_bottombars(void)
 {
-	if (!ISSET(NO_HELP) && LINES > 5) {
-		blank_row(footwin, 1);
-		blank_row(footwin, 2);
-	}
 }
 
 /* When some number of keystrokes has been reached, wipe the status bar. */
@@ -2304,6 +2300,10 @@ void statusline(message_type importance, const char *msg, ...)
 	if (importance >= AHEM)
 		waiting_codes = 0;
 
+	/* Suppress all non-critical status messages for a clean screen. */
+	if (importance < AHEM)
+		return;
+
 	/* Ignore a message with an importance that is lower than the last one. */
 	if (importance < lastmessage && lastmessage > NOTICE)
 		return;
@@ -2438,57 +2438,8 @@ void post_one_key(const char *keystroke, const char *tag, int width)
  * of the bottom portion of the window. */
 void bottombars(int menu)
 {
-	size_t index, number, itemwidth;
-	const keystruct *s;
-	funcstruct *f;
-
 	/* Set the global variable to the given menu. */
 	currmenu = menu;
-
-	if (ISSET(NO_HELP) || LINES < (ISSET(ZERO) ? 3 : ISSET(MINIBAR) ? 4 : 5))
-		return;
-
-	/* Determine how many shortcuts must be shown. */
-	number = shown_entries_for(menu);
-
-	/* Compute the width of each keyname-plus-explanation pair. */
-	itemwidth = COLS / ((number + 1) / 2);
-
-	/* If there is no room, don't print anything. */
-	if (itemwidth == 0)
-		return;
-
-	blank_bottombars();
-
-	/* Display the first number of shortcuts in the given menu that
-	 * have a key combination assigned to them. */
-	for (f = allfuncs, index = 0; f != NULL && index < number; f = f->next) {
-		size_t thiswidth = itemwidth;
-
-		if ((f->menus & menu) == 0)
-			continue;
-
-		s = first_sc_for(menu, f->func);
-
-		if (s == NULL)
-			continue;
-
-		wmove(footwin, 1 + index % 2, (index / 2) * itemwidth);
-
-		/* When the number is uneven, the penultimate item can be double wide. */
-		if ((number % 2) == 1 && (index + 2 == number))
-			thiswidth += itemwidth;
-
-		/* For the last two items, use also the remaining slack. */
-		if (index + 2 >= number)
-			thiswidth += COLS % itemwidth;
-
-		post_one_key(s->keystr, _(f->tag), thiswidth);
-
-		index++;
-	}
-
-	wrefresh(footwin);
 }
 
 /* Redetermine `cursor_row` from the position of current relative to edittop,

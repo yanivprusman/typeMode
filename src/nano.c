@@ -410,20 +410,12 @@ void window_init(void)
 		midwin = newwin(editwinrows, COLS, 0, 0);
 		footwin = newwin(1, COLS, LINES - 1, 0);
 	} else {
-		int minimum = (ISSET(ZERO) ? 3 : ISSET(MINIBAR) ? 4 : 5);
-		int toprows = ((ISSET(EMPTY_LINE) && LINES > minimum) ? 2 : 1);
-		int bottomrows = ((ISSET(NO_HELP) || LINES < minimum) ? 1 : 3);
+		editwinrows = LINES;
 
-		if (ISSET(MINIBAR) || ISSET(ZERO))
-			toprows = 0;
-
-		editwinrows = LINES - toprows - bottomrows + (ISSET(ZERO) ? 1 : 0);
-
-		/* Set up the normal three subwindows. */
-		if (toprows > 0)
-			topwin = newwin(toprows, COLS, 0, 0);
-		midwin = newwin(editwinrows, COLS, toprows, 0);
-		footwin = newwin(bottomrows, COLS, LINES - bottomrows, 0);
+		/* The edit area covers the full screen; the footer overlays
+		 * the last line and is only used when a prompt is needed. */
+		midwin = newwin(editwinrows, COLS, 0, 0);
+		footwin = newwin(1, COLS, LINES - 1, 0);
 	}
 
 	/* In case the terminal shrunk, make sure the status line is clear. */
@@ -2663,11 +2655,6 @@ int main(int argc, char **argv)
 #define NOTREBOUND  TRUE
 #endif
 
-#ifdef ENABLE_HELP
-	if (*openfile->filename == '\0' && openfile->totsize == 0 &&
-				openfile->next == openfile && !ISSET(NO_HELP) && NOTREBOUND)
-		statusbar(_("Welcome to nano.  For basic help, type Ctrl+G."));
-#endif
 
 #ifdef ENABLE_LINENUMBERS
 	/* Set the margin to an impossible value to force re-evaluation. */
