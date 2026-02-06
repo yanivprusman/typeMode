@@ -277,6 +277,7 @@ void cut_till_eof(void);
 void zap_text(void);
 void copy_marked_region(void);
 #endif
+void copy_all_text(void);
 void copy_text(void);
 void paste_text(void);
 
@@ -287,6 +288,8 @@ bool delete_lockfile(const char *lockfilename);
 #endif
 bool open_buffer(const char *filename, bool new_one);
 void load_gpaste_into_buffer(void);
+void do_gpaste_older(void);
+void do_gpaste_newer(void);
 void save_to_gpaste(void);
 void set_modified(void);
 void prepare_for_display(void);

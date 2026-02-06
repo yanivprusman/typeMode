@@ -384,13 +384,40 @@ bool has_valid_path(const char *filename)
 	return validity;
 }
 
-/* Load the last GPaste clipboard entry into the current buffer. */
-void load_gpaste_into_buffer(void)
+/* Index into GPaste history: -1 means showing the user's own text. */
+static int gpaste_index = -1;
+
+/* Saved copy of the user's own text before browsing GPaste history. */
+static linestruct *saved_user_text = NULL;
+
+/* Clear the buffer to an empty state. */
+static void wipe_buffer(void)
 {
-	FILE *gpaste_pipe = popen("gpaste-client --use-index get 0", "r");
+	if (openfile->filetop->next != NULL) {
+		free_lines(openfile->filetop->next);
+		openfile->filetop->next = NULL;
+	}
+	free(openfile->filetop->data);
+	openfile->filetop->data = copy_of("");
+	openfile->filebot = openfile->filetop;
+
+	openfile->current = openfile->filetop;
+	openfile->current_x = 0;
+	openfile->edittop = openfile->filetop;
+}
+
+/* Load GPaste entry at the given index into the current (empty) buffer.
+ * Returns TRUE on success, FALSE if the index is out of range. */
+static bool load_gpaste_entry(int index)
+{
+	char command[64];
+	snprintf(command, sizeof(command),
+				"gpaste-client --use-index get %d", index);
+
+	FILE *gpaste_pipe = popen(command, "r");
 
 	if (gpaste_pipe == NULL)
-		return;
+		return FALSE;
 
 	char *line = NULL;
 	size_t linesize = 0;
@@ -399,12 +426,10 @@ void load_gpaste_into_buffer(void)
 	bool first = TRUE;
 
 	while ((linelen = getline(&line, &linesize, gpaste_pipe)) > 0) {
-		/* Strip the trailing newline, if any. */
 		if (linelen > 0 && line[linelen - 1] == '\n')
 			line[linelen - 1] = '\0';
 
 		if (first) {
-			/* Put the first line into the existing (empty) top line. */
 			free(current->data);
 			current->data = copy_of(line);
 			first = FALSE;
@@ -418,11 +443,96 @@ void load_gpaste_into_buffer(void)
 
 	free(line);
 
-	if (pclose(gpaste_pipe) == 0 && !first) {
+	int status = pclose(gpaste_pipe);
+
+	return (status == 0 && !first);
+}
+
+/* Restore the saved user text into the buffer. */
+static void restore_user_text(void)
+{
+	if (saved_user_text != NULL) {
+		linestruct *copy = copy_buffer(saved_user_text);
+		free(openfile->filetop->data);
+		openfile->filetop->data = copy->data;
+		copy->data = NULL;
+
+		if (copy->next != NULL) {
+			openfile->filetop->next = copy->next;
+			copy->next->prev = openfile->filetop;
+
+			linestruct *bot = copy->next;
+			while (bot->next != NULL)
+				bot = bot->next;
+			openfile->filebot = bot;
+		}
+
+		/* Free just the head node (its data was transferred). */
+		free(copy);
+	}
+
+	openfile->current = openfile->filetop;
+	openfile->current_x = 0;
+	openfile->edittop = openfile->filetop;
+}
+
+/* Load the last GPaste clipboard entry into the current buffer (for startup). */
+void load_gpaste_into_buffer(void)
+{
+	if (load_gpaste_entry(0)) {
 		free(openfile->filename);
 		openfile->filename = copy_of("[GPaste]");
 		gpaste_mode = TRUE;
 		openfile->modified = FALSE;
+	}
+}
+
+/* Navigate to an older GPaste history entry (Ctrl+Up). */
+void do_gpaste_older(void)
+{
+	/* On first press, save the user's current text. */
+	if (gpaste_index == -1) {
+		free_lines(saved_user_text);
+		saved_user_text = copy_buffer(openfile->filetop);
+	}
+
+	int try_index = gpaste_index + 1;
+
+	wipe_buffer();
+
+	if (load_gpaste_entry(try_index)) {
+		gpaste_index = try_index;
+		refresh_needed = TRUE;
+	} else {
+		/* No more entries; stay at current index. */
+		if (gpaste_index >= 0)
+			load_gpaste_entry(gpaste_index);
+		else
+			restore_user_text();
+		statusline(AHEM, _("No more history"));
+		refresh_needed = TRUE;
+	}
+}
+
+/* Navigate to a newer GPaste history entry (Ctrl+Down). */
+void do_gpaste_newer(void)
+{
+	if (gpaste_index <= -1) {
+		statusline(AHEM, _("Already at your text"));
+		return;
+	}
+
+	wipe_buffer();
+
+	if (gpaste_index == 0) {
+		/* Back to the user's own text. */
+		restore_user_text();
+		gpaste_index = -1;
+		refresh_needed = TRUE;
+	} else {
+		gpaste_index--;
+		load_gpaste_entry(gpaste_index);
+		refresh_needed = TRUE;
 	}
 }
 

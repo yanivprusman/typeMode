@@ -853,7 +853,13 @@ void shortcut_init(void)
 	add_to_funcs(do_mark, MMAIN,
 			N_("Set Mark"), WHENHELP(mark_gist), TOGETHER);
 	add_to_funcs(copy_text, MMAIN,
-			N_("Copy"), WHENHELP(copy_gist), BLANKAFTER);
+			N_("Copy"), WHENHELP(copy_gist), TOGETHER);
+	add_to_funcs(copy_all_text, MMAIN,
+			N_("Copy All"), WHENHELP(copy_gist), TOGETHER);
+	add_to_funcs(do_gpaste_older, MMAIN,
+			N_("GPaste Older"), WHENHELP(copy_gist), TOGETHER);
+	add_to_funcs(do_gpaste_newer, MMAIN,
+			N_("GPaste Newer"), WHENHELP(copy_gist), BLANKAFTER);
 #endif
 
 	add_to_funcs(case_sens_void, MWHEREIS|MREPLACE,
@@ -1232,6 +1238,7 @@ void shortcut_init(void)
 	add_to_sclist(MMOST, "Tab", '\t', do_tab, 0);
 	add_to_sclist(MMAIN|MBROWSER|MHELP, "^B", 0, do_search_backward, 0);
 	add_to_sclist(MMAIN|MBROWSER|MHELP, "^F", 0, do_search_forward, 0);
+	add_to_sclist(MMAIN, "^C", 0, copy_all_text, 0);
 	if (ISSET(MODERN_BINDINGS)) {
 		add_to_sclist((MMOST|MBROWSER) & ~MFINDINHELP, help_key, 0, do_help, 0);
 		add_to_sclist(MHELP, help_key, 0, do_exit, 0);
@@ -1250,7 +1257,7 @@ void shortcut_init(void)
 		add_to_sclist(MMAIN, "^A", 0, do_mark, 0);
 #endif
 		add_to_sclist(MMAIN, "^X", 0, cut_text, 0);
-		add_to_sclist(MMAIN, "^C", 0, copy_text, 0);
+		add_to_sclist(MMAIN, "^C", 0, copy_all_text, 0);
 		add_to_sclist(MMAIN, "^V", 0, paste_text, 0);
 	} else {
 		add_to_sclist((MMOST|MBROWSER) & ~MFINDINHELP, "^G", 0, do_help, 0);
@@ -1395,15 +1402,15 @@ void shortcut_init(void)
 	if (using_utf8) {
 		add_to_sclist(MMAIN|MBROWSER|MHELP, "\xE2\x96\xb4", KEY_UP, do_up, 0);
 		add_to_sclist(MMAIN|MBROWSER|MHELP, "\xE2\x96\xbe", KEY_DOWN, do_down, 0);
-		add_to_sclist(MMAIN|MBROWSER|MLINTER, "^\xE2\x96\xb4", CONTROL_UP, to_prev_block, 0);
-		add_to_sclist(MMAIN|MBROWSER|MLINTER, "^\xE2\x96\xbe", CONTROL_DOWN, to_next_block, 0);
+		add_to_sclist(MMAIN, "^\xE2\x96\xb4", CONTROL_UP, do_gpaste_older, 0);
+		add_to_sclist(MMAIN, "^\xE2\x96\xbe", CONTROL_DOWN, do_gpaste_newer, 0);
 	} else
 #endif
 	{
 		add_to_sclist(MMAIN|MBROWSER|MHELP, "Up", KEY_UP, do_up, 0);
 		add_to_sclist(MMAIN|MBROWSER|MHELP, "Down", KEY_DOWN, do_down, 0);
-		add_to_sclist(MMAIN|MBROWSER|MLINTER, "^Up", CONTROL_UP, to_prev_block, 0);
-		add_to_sclist(MMAIN|MBROWSER|MLINTER, "^Down", CONTROL_DOWN, to_next_block, 0);
+		add_to_sclist(MMAIN, "^Up", CONTROL_UP, do_gpaste_older, 0);
+		add_to_sclist(MMAIN, "^Down", CONTROL_DOWN, do_gpaste_newer, 0);
 	}
 	add_to_sclist(MMAIN, "M-7", 0, to_prev_block, 0);
 	add_to_sclist(MMAIN, "M-8", 0, to_next_block, 0);

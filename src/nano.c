@@ -1667,7 +1667,7 @@ void process_a_keystroke(void)
 		give_a_hint = FALSE;
 
 	/* When not cutting or copying text, drop the cutbuffer the next time. */
-	if (function != cut_text && function != copy_text) {
+	if (function != cut_text && function != copy_text && function != copy_all_text) {
 #ifndef NANO_TINY
 		if (function != zap_text)
 #endif
@@ -2628,7 +2628,7 @@ int main(int argc, char **argv)
 	 * switch from the last opened file to the next, that is: the first. */
 	if (openfile == NULL) {
 		open_buffer("", TRUE);
-		load_gpaste_into_buffer();
+		gpaste_mode = TRUE;
 		UNSET(VIEW_MODE);
 	}
 #ifdef ENABLE_MULTIBUFFER

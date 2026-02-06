@@ -642,6 +642,29 @@ void copy_marked_region(void)
 }
 #endif /* !NANO_TINY */
 
+/* Copy the entire buffer contents to the system clipboard. */
+void copy_all_text(void)
+{
+	FILE *clip = popen("xclip -selection clipboard", "w");
+
+	if (clip == NULL) {
+		statusline(AHEM, _("Cannot reach clipboard"));
+		return;
+	}
+
+	for (linestruct *line = openfile->filetop; line != NULL; line = line->next) {
+		fputs(line->data, clip);
+
+		if (line->next != NULL)
+			fputc('\n', clip);
+	}
+
+	if (pclose(clip) == 0)
+		statusline(AHEM, _("Copied all text"));
+	else
+		statusline(AHEM, _("Cannot reach clipboard"));
+}
+
 /* Copy text from the current buffer into the cutbuffer.  The text is either
  * the marked region, the whole line, the text from cursor to end-of-line,
  * just the line break, or nothing, depending on mode and cursor position. */
