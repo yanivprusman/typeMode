@@ -165,6 +165,8 @@ bool keep_cutbuffer = FALSE;
 
 openfilestruct *openfile = NULL;
 		/* The list of all open file buffers. */
+bool gpaste_mode = FALSE;
+		/* Whether we loaded from GPaste and should save back to it. */
 #ifdef ENABLE_MULTIBUFFER
 openfilestruct *startfile = NULL;
 		/* The first open buffer. */

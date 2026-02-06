@@ -2628,6 +2628,7 @@ int main(int argc, char **argv)
 	 * switch from the last opened file to the next, that is: the first. */
 	if (openfile == NULL) {
 		open_buffer("", TRUE);
+		load_gpaste_into_buffer();
 		UNSET(VIEW_MODE);
 	}
 #ifdef ENABLE_MULTIBUFFER

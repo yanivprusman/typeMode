@@ -112,6 +112,7 @@ extern linestruct *cutbottom;
 extern bool keep_cutbuffer;
 
 extern openfilestruct *openfile;
+extern bool gpaste_mode;
 #ifdef ENABLE_MULTIBUFFER
 extern openfilestruct *startfile;
 #endif
@@ -285,6 +286,8 @@ void make_new_buffer(void);
 bool delete_lockfile(const char *lockfilename);
 #endif
 bool open_buffer(const char *filename, bool new_one);
+void load_gpaste_into_buffer(void);
+void save_to_gpaste(void);
 void set_modified(void);
 void prepare_for_display(void);
 #ifdef ENABLE_MULTIBUFFER

@@ -384,6 +384,82 @@ bool has_valid_path(const char *filename)
 	return validity;
 }
 
+/* Load the last GPaste clipboard entry into the current buffer. */
+void load_gpaste_into_buffer(void)
+{
+	FILE *gpaste_pipe = popen("gpaste-client --use-index get 0", "r");
+
+	if (gpaste_pipe == NULL)
+		return;
+
+	char *line = NULL;
+	size_t linesize = 0;
+	ssize_t linelen;
+	linestruct *current = openfile->filetop;
+	bool first = TRUE;
+
+	while ((linelen = getline(&line, &linesize, gpaste_pipe)) > 0) {
+		/* Strip the trailing newline, if any. */
+		if (linelen > 0 && line[linelen - 1] == '\n')
+			line[linelen - 1] = '\0';
+
+		if (first) {
+			/* Put the first line into the existing (empty) top line. */
+			free(current->data);
+			current->data = copy_of(line);
+			first = FALSE;
+		} else {
+			linestruct *newnode = make_new_node(current);
+			newnode->data = copy_of(line);
+			splice_node(current, newnode);
+			current = newnode;
+		}
+	}
+
+	free(line);
+
+	if (pclose(gpaste_pipe) == 0 && !first) {
+		free(openfile->filename);
+		openfile->filename = copy_of("[GPaste]");
+		gpaste_mode = TRUE;
+		openfile->modified = FALSE;
+	}
+}
+
+/* Write the current buffer back to GPaste. */
+void save_to_gpaste(void)
+{
+	FILE *gpaste_pipe = popen("gpaste-client", "w");
+
+	if (gpaste_pipe == NULL) {
+		statusline(ALERT, _("Error writing to GPaste"));
+		return;
+	}
+
+	linestruct *line = openfile->filetop;
+
+	while (line != NULL) {
+		size_t data_len = recode_LF_to_NUL(line->data);
+
+		fwrite(line->data, 1, data_len, gpaste_pipe);
+
+		recode_NUL_to_LF(line->data, data_len);
+
+		if (line->next != NULL)
+			fputc('\n', gpaste_pipe);
+
+		line = line->next;
+	}
+
+	if (pclose(gpaste_pipe) == 0) {
+		openfile->modified = FALSE;
+		titlebar(NULL);
+		statusbar(_("Saved to GPaste"));
+	} else {
+		statusline(ALERT, _("Error writing to GPaste"));
+	}
+}
+
 /* This does one of three things.  If the filename is "", it just creates
  * a new empty buffer.  When the filename is not empty, it reads that file
  * into a new buffer when requested, otherwise into the existing buffer. */
@@ -2381,6 +2457,11 @@ void do_writeout(void)
 /* If it has a name, write the current buffer to disk without prompting. */
 void do_savefile(void)
 {
+	if (gpaste_mode) {
+		save_to_gpaste();
+		return;
+	}
+
 	if (write_it_out(FALSE, FALSE) == 2)
 		close_and_go();
 }
