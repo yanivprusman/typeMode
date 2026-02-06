@@ -14,7 +14,13 @@ core
 .gdbinit
 
 /src/nano
+/src/typeMode
 /src/revision.h
+
+/confdefs.h
+/conftest
+/conftest.c
+/conftest.file
 
 /ABOUT-NLS
 /INSTALL
