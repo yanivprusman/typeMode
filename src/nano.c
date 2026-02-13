@@ -321,6 +321,12 @@ void do_exit(void)
 		statusbar(_("Cancelled"));
 }
 
+/* Close the current buffer without saving, unconditionally. */
+void do_exit_discard(void)
+{
+	close_and_go();
+}
+
 /* Save the current buffer under the given name (or "nano.<pid>" when nameless)
  * with suffix ".save".  If needed, the name is further suffixed to be unique. */
 void emergency_save(const char *filename)

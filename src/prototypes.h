@@ -417,6 +417,7 @@ void suggest_ctrlT_ctrlZ(void);
 void finish(void);
 void close_and_go(void);
 void do_exit(void);
+void do_exit_discard(void);
 void die(const char *msg, ...);
 void window_init(void);
 void install_handler_for_Ctrl_C(void);

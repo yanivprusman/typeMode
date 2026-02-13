@@ -1246,7 +1246,7 @@ void shortcut_init(void)
 		add_to_sclist(MMAIN, "^S", 0, do_savefile, 0);
 		add_to_sclist(MMAIN, "^W", 0, do_writeout, 0);
 		add_to_sclist(MMAIN, "^O", 0, do_insertfile, 0);
-		add_to_sclist(MMAIN|MBROWSER|MHELP, "^D", 0, do_exit, 0);
+		add_to_sclist(MMAIN|MBROWSER|MHELP, "^D", 0, do_exit_discard, 0);
 		add_to_sclist(MMAIN|MBROWSER|MHELP, "^G", 0, do_findnext, 0);
 		add_to_sclist(MMAIN, "^R", 0, do_replace, 0);
 		add_to_sclist(MMAIN, "^T", 0, do_gotolinecolumn, 0);
@@ -1277,7 +1277,7 @@ void shortcut_init(void)
 		add_to_sclist(MMAIN|MBROWSER|MHELP|MLINTER, "^V", 0, do_page_down, 0);
 		add_to_sclist(MMAIN, "^C", 0, report_cursor_position, 0);
 		add_to_sclist(MMOST, "^H", '\b', do_backspace, 0);
-		add_to_sclist(MMAIN|MBROWSER|MHELP, "^D", 0, do_exit, 0);
+		add_to_sclist(MMAIN|MBROWSER|MHELP, "^D", 0, do_exit_discard, 0);
 	}
 	add_to_sclist(MMOST, "Bsp", KEY_BACKSPACE, do_backspace, 0);
 	add_to_sclist(MMOST, "Sh-Del", SHIFT_DELETE, do_backspace, 0);
