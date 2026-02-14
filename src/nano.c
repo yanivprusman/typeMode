@@ -321,9 +321,12 @@ void do_exit(void)
 		statusbar(_("Cancelled"));
 }
 
-/* Close the current buffer without saving, unconditionally. */
+/* Close the current buffer without saving, unconditionally.
+ * If text was typed/modified and the buffer is not empty, save to GPaste first. */
 void do_exit_discard(void)
 {
+	if (openfile->modified && !buffer_is_empty())
+		save_to_gpaste();
 	close_and_go();
 }
 

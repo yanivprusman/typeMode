@@ -287,6 +287,7 @@ void make_new_buffer(void);
 bool delete_lockfile(const char *lockfilename);
 #endif
 bool open_buffer(const char *filename, bool new_one);
+bool buffer_is_empty(void);
 void load_gpaste_into_buffer(void);
 void do_gpaste_older(void);
 void do_gpaste_newer(void);

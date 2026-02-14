@@ -390,6 +390,13 @@ static int gpaste_index = -1;
 /* Saved copy of the user's own text before browsing GPaste history. */
 static linestruct *saved_user_text = NULL;
 
+/* Whether the buffer contains no text at all. */
+bool buffer_is_empty(void)
+{
+	return (openfile->filetop == openfile->filebot &&
+			openfile->filetop->data[0] == '\0');
+}
+
 /* Clear the buffer to an empty state. */
 static void wipe_buffer(void)
 {
@@ -404,6 +411,35 @@ static void wipe_buffer(void)
 	openfile->current = openfile->filetop;
 	openfile->current_x = 0;
 	openfile->edittop = openfile->filetop;
+	openfile->totsize = 0;
+}
+
+/* Amend (replace) the GPaste entry at the given index with the buffer contents.
+ * Deletes the old entry and adds the new text (which goes to index 0). */
+static void amend_gpaste_entry(int index)
+{
+	char command[64];
+
+	/* Delete the old entry first. */
+	snprintf(command, sizeof(command),
+				"gpaste-client --use-index delete %d", index);
+	IGNORE_CALL_RESULT(system(command));
+
+	/* Add the modified text as a new entry (goes to index 0). */
+	FILE *pipe = popen("gpaste-client", "w");
+
+	if (pipe == NULL)
+		return;
+
+	for (linestruct *line = openfile->filetop; line; line = line->next) {
+		size_t data_len = recode_LF_to_NUL(line->data);
+		fwrite(line->data, 1, data_len, pipe);
+		recode_NUL_to_LF(line->data, data_len);
+		if (line->next)
+			fputc('\n', pipe);
+	}
+
+	pclose(pipe);
 }
 
 /* Load GPaste entry at the given index into the current (empty) buffer.
@@ -490,6 +526,11 @@ void load_gpaste_into_buffer(void)
 /* Navigate to an older GPaste history entry (Ctrl+Up). */
 void do_gpaste_older(void)
 {
+	/* If viewing a modified GPaste entry, amend it before navigating.
+	 * After delete+add, the entry at (gpaste_index+1) stays at (gpaste_index+1). */
+	if (gpaste_index >= 0 && openfile->modified)
+		amend_gpaste_entry(gpaste_index);
+
 	/* On first press, save the user's current text. */
 	if (gpaste_index == -1) {
 		free_lines(saved_user_text);
@@ -502,6 +543,7 @@ void do_gpaste_older(void)
 
 	if (load_gpaste_entry(try_index)) {
 		gpaste_index = try_index;
+		openfile->modified = FALSE;
 		refresh_needed = TRUE;
 	} else {
 		/* No more entries; stay at current index. */
@@ -517,8 +559,37 @@ void do_gpaste_older(void)
 /* Navigate to a newer GPaste history entry (Ctrl+Down). */
 void do_gpaste_newer(void)
 {
+	/* At user's own text: if non-empty, add to GPaste and clear buffer. */
 	if (gpaste_index <= -1) {
-		statusline(AHEM, _("Already at your text"));
+		if (!buffer_is_empty()) {
+			save_to_gpaste();
+			wipe_buffer();
+			free_lines(saved_user_text);
+			saved_user_text = NULL;
+			openfile->modified = FALSE;
+			refresh_needed = TRUE;
+			return;
+		}
+		statusline(AHEM, _("Nothing to save"));
+		return;
+	}
+
+	/* If viewing a modified GPaste entry, amend it before navigating.
+	 * After delete+add, the entry at (gpaste_index-1) is now at gpaste_index. */
+	if (gpaste_index >= 0 && openfile->modified) {
+		amend_gpaste_entry(gpaste_index);
+
+		wipe_buffer();
+
+		if (gpaste_index == 0) {
+			restore_user_text();
+			gpaste_index = -1;
+		} else {
+			load_gpaste_entry(gpaste_index);
+			openfile->modified = FALSE;
+		}
+
+		refresh_needed = TRUE;
 		return;
 	}
 
@@ -532,6 +603,7 @@ void do_gpaste_newer(void)
 	} else {
 		gpaste_index--;
 		load_gpaste_entry(gpaste_index);
+		openfile->modified = FALSE;
 		refresh_needed = TRUE;
 	}
 }
