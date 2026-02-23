@@ -335,12 +335,16 @@ void do_exit_discard(void)
 void emergency_save(const char *filename)
 {
 	char *plainname, *targetname;
+	const char *savedir = "/opt/automateLinux/data/typeMode-saves/";
 
 	if (*filename == '\0') {
-		plainname = nmalloc(28);
-		sprintf(plainname, "nano.%u", getpid());
-	} else
-		plainname = copy_of(filename);
+		plainname = nmalloc(strlen(savedir) + 28);
+		sprintf(plainname, "%snano.%u", savedir, getpid());
+	} else {
+		const char *base = tail(filename);
+		plainname = nmalloc(strlen(savedir) + strlen(base) + 1);
+		sprintf(plainname, "%s%s", savedir, base);
+	}
 
 	targetname = get_next_filename(plainname, ".save");
 
