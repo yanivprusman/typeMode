@@ -306,6 +306,8 @@ keystruct *strtosc(const char *input)
 		s->func = chop_previous_word;
 	else if (!strcmp(input, "chopwordright"))
 		s->func = chop_next_word;
+	else if (!strcmp(input, "choptobol"))
+		s->func = chop_to_bol;
 	else if (!strcmp(input, "findbracket"))
 		s->func = do_find_bracket;
 	else if (!strcmp(input, "wordcount"))

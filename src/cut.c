@@ -250,6 +250,33 @@ void chop_next_word(void)
 	if (is_cuttable(TRUE))
 		chop_word(FORWARD);
 }
+
+/* Delete from the cursor to the beginning of the line (readline Ctrl+U). */
+void chop_to_bol(void)
+{
+	if (openfile->current_x == 0) {
+		statusbar(_("Nothing was cut"));
+		return;
+	}
+
+	/* Remember the cutbuffer so it can be restored after the chop. */
+	linestruct *is_cutbuffer = cutbuffer;
+
+	cutbuffer = NULL;
+
+	/* Set the mark at the beginning of the current line. */
+	openfile->mark = openfile->current;
+	openfile->mark_x = 0;
+
+	/* Cut the marked region (from BOL to cursor). */
+	add_undo(CUT, NULL);
+	do_snip(TRUE, FALSE, FALSE);
+	update_undo(CUT);
+
+	/* Discard the cut text and restore the cutbuffer. */
+	free_lines(cutbuffer);
+	cutbuffer = is_cutbuffer;
+}
 #endif /* !NANO_TINY */
 
 /* Excise the text between the given two points and add it to the cutbuffer. */

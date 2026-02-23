@@ -652,6 +652,8 @@ void shortcut_init(void)
 		N_("Delete backward from cursor to word start");
 	const char *chopwordright_gist =
 		N_("Delete forward from cursor to next word start");
+	const char *choptobol_gist =
+		N_("Delete backward from cursor to beginning of line");
 	const char *cuttilleof_gist =
 		N_("Cut from the cursor position to the end of the file");
 #endif
@@ -1025,6 +1027,8 @@ void shortcut_init(void)
 			N_("Chop Left"), WHENHELP(chopwordleft_gist), TOGETHER);
 	add_to_funcs(chop_next_word, MMAIN,
 			N_("Chop Right"), WHENHELP(chopwordright_gist), TOGETHER);
+	add_to_funcs(chop_to_bol, MMAIN,
+			N_("Chop to BOL"), WHENHELP(choptobol_gist), TOGETHER);
 	add_to_funcs(cut_till_eof, MMAIN,
 			N_("Cut Till End"), WHENHELP(cuttilleof_gist), BLANKAFTER);
 #endif
@@ -1296,7 +1300,7 @@ void shortcut_init(void)
 #else
 	add_to_sclist(MMOST, "M-6", 0, copy_text, 0);
 	add_to_sclist(MMOST, "M-^", 0, copy_text, 0);
-	add_to_sclist(MMOST, "^U", 0, paste_text, 0);
+	add_to_sclist(MMAIN, "^U", 0, chop_to_bol, 0);
 	add_to_sclist(MMAIN, ISSET(MODERN_BINDINGS) ? "^E" : "^T", 0, do_execute, 0);
 #ifdef ENABLE_SPELLER
 	if (!ISSET(PRESERVE))

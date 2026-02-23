@@ -1415,7 +1415,7 @@ bool changes_something(functionptrtype f)
 	return (f == do_savefile || f == do_writeout || f == do_enter || f == do_tab ||
 			f == do_delete || f == do_backspace || f == cut_text || f == paste_text ||
 #ifndef NANO_TINY
-			f == chop_previous_word || f == chop_next_word ||
+			f == chop_previous_word || f == chop_next_word || f == chop_to_bol ||
 			f == zap_text || f == cut_till_eof || f == do_execute ||
 			f == do_indent || f == do_unindent ||
 #endif

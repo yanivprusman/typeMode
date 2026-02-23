@@ -263,6 +263,7 @@ void do_backspace(void);
 #ifndef NANO_TINY
 void chop_previous_word(void);
 void chop_next_word(void);
+void chop_to_bol(void);
 #endif
 void extract_segment(linestruct *top, size_t top_x, linestruct *bot, size_t bot_x);
 void ingraft_buffer(linestruct *topline);
