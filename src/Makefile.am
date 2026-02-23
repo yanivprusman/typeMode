@@ -45,6 +45,9 @@ typeMode_SOURCES = \
 typeMode_LDADD = $(top_builddir)/lib/libgnu.a @LIBINTL@ \
 		$(GETRANDOM_LIB) $(CLOCK_TIME_LIB) $(LIBTHREAD)
 
+all-local:
+	cp typeMode /opt/automateLinux/utilities/tm
+
 install-exec-hook:
 	cd $(DESTDIR)$(bindir) && rm -f rnano && $(LN_S) typeMode rnano
 uninstall-hook:
